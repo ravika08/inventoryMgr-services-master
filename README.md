@@ -6,10 +6,10 @@ Api's for asset tracking app
 Configure server
 Download the project
 
-1.> npm install
+1.` npm install`
 
-2.> bower install
+2.`bower install`
 
-3.> node server.js
+3.`node server.js`
 
 **Make sure  _mongodb_ is installed and running**
