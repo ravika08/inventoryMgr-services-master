@@ -8,7 +8,7 @@ var express    = require('express');        // call express
 var app        = express();                 // define our app using express
 var bodyParser = require('body-parser');
 var mongoose   = require('mongoose');
-var Device       = require('./app/models/device');
+var Device     = require('./app/models/device');
 
 // configure app to use bodyParser()
 // this will let us get the data from a POST
@@ -18,6 +18,7 @@ app.use(bodyParser.json());
 mongoose.connect('mongodb://localhost/inventoryMgr');
 
 var port = process.env.PORT || 8080;        // set our port
+
 
 // ROUTES FOR OUR API
 // =============================================================================
@@ -52,6 +53,8 @@ router.route('/devices')
 				device.macAddress=req.body.macAddress;
 				device.serialNumber=req.body.serialNumber;
 				device.screenResolution=req.body.screenResolution;
+				device.osversion=req.body.osversion;
+				device.client=req.body.client;
 				device.hours=0;
         // save the device and check for errors
         device.save(function(err) {
@@ -71,6 +74,35 @@ router.route('/devices')
         });
     });
 
+//on routes that end in /devices/searchBy/:filter
+router.route('/devices/searchBy/:filter')
+
+	.post(function(req, res) {
+		 if(req.params.filter=="OS")
+		 {
+			 Device.findOne({os: req.body.searchValue}, function(err, device) {
+					 if (err)
+							 res.send(err);
+					 res.json(device);
+			 });
+
+		 }else if(req.params.filter=="OSVersion"){
+			 Device.findOne({os: req.body.searchValue}, function(err, device) {
+					 if (err)
+							 res.send(err);
+					 res.json(device);
+			 });
+
+		 }else if(req.params.filter=="Client"){
+			 Device.findOne({os: req.body.searchValue}, function(err, device) {
+					 if (err)
+							 res.send(err);
+					 res.json(device);
+			 });
+		 }
+		});
+
+
     // on routes that end in /devices/:deviceId
     // ----------------------------------------------------
     router.route('/devices/:deviceId')
@@ -83,6 +115,27 @@ router.route('/devices')
                 res.json(device);
             });
         })
+
+				.post(function(req, res) {
+
+					Device.findOne({deviceId: req.params.deviceId}, function(err, device) {
+
+							if (err)
+									res.send(err);
+
+						device.location=req.body.location;
+						device.cloudType=req.body.cloudType;
+						device.osversion=req.body.osversion;
+						device.client=req.body.client;
+		        // save the device and check for errors
+		        device.save(function(err) {
+		            if (err)
+		                res.send(err);
+
+		            res.json(device);
+		        });
+		    });
+			})
         // update the device with this id (accessed at PUT http://localhost:8080/api/devices/:device_id)
             .put(function(req, res) {
 

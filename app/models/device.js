@@ -5,6 +5,8 @@ var DeviceSchema   = new Schema({
     name: String,
     deviceId:String,
     os:String,
+		osversion:String,
+		client:String,
     status:String,
     user:String,
 		hours:Number,
