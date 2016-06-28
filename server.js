@@ -80,24 +80,24 @@ router.route('/devices/searchBy/:filter')
 	.post(function(req, res) {
 		 if(req.params.filter=="OS")
 		 {
-			 Device.findOne({os: req.body.searchValue}, function(err, device) {
+			 Device.find({os: req.body.searchValue}, function(err, devices) {
 					 if (err)
 							 res.send(err);
-					 res.json(device);
+					 res.json(devices);
 			 });
 
 		 }else if(req.params.filter=="OSVersion"){
-			 Device.findOne({os: req.body.searchValue}, function(err, device) {
+			 Device.find({osversion: req.body.searchValue}, function(err, devices) {
 					 if (err)
 							 res.send(err);
-					 res.json(device);
+					 res.json(devices);
 			 });
 
 		 }else if(req.params.filter=="Client"){
-			 Device.findOne({os: req.body.searchValue}, function(err, device) {
+			 Device.find({client: req.body.searchValue}, function(err, devices) {
 					 if (err)
 							 res.send(err);
-					 res.json(device);
+					 res.json(devices);
 			 });
 		 }
 		});
