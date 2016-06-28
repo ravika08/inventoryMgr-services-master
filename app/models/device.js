@@ -15,8 +15,10 @@ var DeviceSchema   = new Schema({
 		macAddress:String,
 		serialNumber:String,
 		screenResolution:String,
+		assetID:String,
 		cloudType:String,
-		lastUpdated_at:Date
+		lastUpdated_at:Date,
+		purchase_date:Date
 });
 
 module.exports = mongoose.model('Device', DeviceSchema);

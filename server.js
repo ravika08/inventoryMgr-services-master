@@ -56,6 +56,8 @@ router.route('/devices')
 				device.osversion=req.body.osversion;
 				device.client=req.body.client;
 				device.hours=0;
+				device.assetID=req.body.assetID;
+				device.purchase_date=Date.now();
         // save the device and check for errors
         device.save(function(err) {
             if (err)
