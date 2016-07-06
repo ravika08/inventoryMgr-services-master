@@ -104,6 +104,93 @@ router.route('/devices/searchBy/:filter')
 		 }
 		});
 
+//on routes that end in /devices/countBy/:filter
+ router.route('/devices/countBy/:filter')
+
+       .post(function(req,res){
+				 if(req.params.filter=="Client"){
+				    Device.count({
+            client:req.body.searchValue
+		        }, function (err, result) {
+              if (err) {
+                next(err);
+              } else {
+               res.json(result);
+            }
+          });
+				}else if(req.params.filter=="OS"){
+	        Device.count({
+             os:req.body.searchValue
+              }, function (err, result) {
+             if (err) {
+              next(err);
+              } else {
+         res.json(result);
+         }
+          });
+    }
+});
+
+//on routes that end in /devices/hoursBy/:filter
+router.route('/devices/hoursBy/:filter')
+    .get(function(req,res){
+			if(req.params.filter=="Client"){
+				Device.aggregate([
+        { $group: {
+            _id:  {client : '$client',os:'$os'},
+            total_hours: { $sum: '$hours'}
+        }}
+    ], function (err, results) {
+        if (err) {
+            console.error(err);
+        } else {
+            res.json(results);
+        }
+    }
+);
+			}else if(req.params.filter=="OS"){
+				Device.aggregate([
+        { $group: {
+            _id:'$os',
+            total_hours: { $sum: '$hours'}
+        }}
+    ], function (err, results) {
+        if (err) {
+            console.error(err);
+        } else {
+            res.json(results);
+        }
+    }
+);
+			}else if(req.params.filter=="OSVersion"){
+				Device.aggregate([
+        { $group: {
+            _id:{os:'$os',version:'$osversion'},
+            total_hours: { $sum: '$hours'}
+        }}
+    ], function (err, results) {
+        if (err) {
+            console.error(err);
+        } else {
+            res.json(results);
+        }
+    }
+);
+			}
+		})
+
+//on routes that end in /devices/clients
+router.route('/device/clients/')
+
+   .get(function(req,res){
+		 Device.distinct("client", function (err, result) {
+      if (err) {
+        next(err);
+      } else {
+        res.json(result);
+      }
+  });
+});
 
     // on routes that end in /devices/:deviceId
     // ----------------------------------------------------
@@ -111,7 +198,7 @@ router.route('/devices/searchBy/:filter')
 
         // get the device with that id (accessed at GET http://localhost:8080/api/devices/:device_id)
         .get(function(req, res) {
-            Device.findOne({deviceId: req.params.deviceId}, function(err, device) {
+            Device.findOne({deviceId: req.params.deviceId},{hours:1}, function(err, device) {
                 if (err)
                     res.send(err);
                 res.json(device);
