@@ -2,7 +2,8 @@ var mongoose     = require('mongoose');
 var Schema       = mongoose.Schema;
 
 var DeviceSchema   = new Schema({
-    name: String,
+    manufacturer: String,
+		model:String,
     deviceId:String,
     os:String,
 		osversion:String,
@@ -18,7 +19,13 @@ var DeviceSchema   = new Schema({
 		assetID:String,
 		cloudType:String,
 		lastUpdated_at:Date,
+		imei:String,
 		purchase_date:Date
 });
-
+DeviceSchema.plugin(require('historical'), {
+    connection: mongoose.createConnection('mongodb://localhost/inventoryMgr'),
+    name: null,
+    primaryKeyName: null,
+    primaryKeyType: null
+});
 module.exports = mongoose.model('Device', DeviceSchema);

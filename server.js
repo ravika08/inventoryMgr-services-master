@@ -42,7 +42,8 @@ router.route('/devices')
     .post(function(req, res) {
 
         var device = new Device();      // create a new instance of the Device model
-        device.name = req.body.name;  // set the device name (comes from the request)
+        device.manufacturer = req.body.manufacturer;
+				device.model=req.body.model; // set the device name (comes from the request)
         device.deviceId=req.body.deviceId;
         device.os=req.body.os;
         device.status=req.body.status;
@@ -55,7 +56,7 @@ router.route('/devices')
 				device.screenResolution=req.body.screenResolution;
 				device.osversion=req.body.osversion;
 				device.client=req.body.client;
-				device.hours=0;
+				device.hours=req.body.hours;
 				device.assetID=req.body.assetID;
 				device.purchase_date=Date.now();
         // save the device and check for errors
@@ -179,8 +180,17 @@ router.route('/devices/hoursBy/:filter')
 			}
 		})
 
+
+router.route('/deviceinfo/client/:clientId')
+    .get(function(req,res){
+			Device.find({client: req.params.clientId}, function(err, devices) {
+					if (err)
+							res.send(err);
+					res.json(devices);
+				});
+		});
 //on routes that end in /devices/clients
-router.route('/device/clients/')
+router.route('/atm/clients')
 
    .get(function(req,res){
 		 Device.distinct("client", function (err, result) {
@@ -192,13 +202,27 @@ router.route('/device/clients/')
   });
 });
 
+router.route('/atm/osversions')
+				.get(function(req,res){
+					Device.aggregate([
+	        { $group: {
+	            _id:{os:'$os',osversion:'$osversion'}
+	        }}
+	    ], function(err,result){
+						if(err){
+							next(err);
+						}else{
+							res.json(result);
+						}
+					});
+				});
     // on routes that end in /devices/:deviceId
     // ----------------------------------------------------
     router.route('/devices/:deviceId')
 
         // get the device with that id (accessed at GET http://localhost:8080/api/devices/:device_id)
         .get(function(req, res) {
-            Device.findOne({deviceId: req.params.deviceId},{hours:1}, function(err, device) {
+            Device.findOne({deviceId: req.params.deviceId}, function(err, device) {
                 if (err)
                     res.send(err);
                 res.json(device);
@@ -216,6 +240,8 @@ router.route('/device/clients/')
 						device.cloudType=req.body.cloudType;
 						device.osversion=req.body.osversion;
 						device.client=req.body.client;
+						if(req.body.hours!=null)
+						   device.hours=device.hours+req.body.hours;
 		        // save the device and check for errors
 		        device.save(function(err) {
 		            if (err)
@@ -235,7 +261,6 @@ router.route('/device/clients/')
                     if (err)
                         res.send(err);
 
-                    console.log("device name "+device.name);
                     device.status = req.body.status;
                     device.user=req.body.user; // update the devices info
                     console.log("device status "+req.body.status);
@@ -247,13 +272,16 @@ router.route('/device/clients/')
 											device.hours=device.hours.toFixed(2);
 											console.log("hours "+hours);
 										}
+										console.log("device updated at");
 										device.lastUpdated_at=Date.now();
-
+										console.log("device save");
                     // save the device
                     device.save(function(err) {
-                        if (err)
+                        if (err){
+												   console.log("error"+err);
                             res.send(err);
-
+													}
+												console.log("send response json");
                         res.json(device);
                     });
 
