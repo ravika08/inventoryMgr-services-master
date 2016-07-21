@@ -9,6 +9,7 @@ var app        = express();                 // define our app using express
 var bodyParser = require('body-parser');
 var mongoose   = require('mongoose');
 var Device     = require('./app/models/device');
+var Location   = require('./app/models/locations');
 
 // configure app to use bodyParser()
 // this will let us get the data from a POST
@@ -76,6 +77,27 @@ router.route('/devices')
             res.json(devices);
         });
     });
+//on routes that end in /atm/locations
+router.route('/atm/locations')
+//create new location
+.post(function(req,res){
+	var location= new Location();
+	location.locationName=req.body.locationName;
+	location.save(function(err) {
+			if (err)
+					res.send(err);
+
+			res.json(location);
+	});
+})
+//get all locations
+   .get(function(req,res){
+		 Location.find(function(err,locations){
+			 if(err)
+			   res.send(err);
+			res.json(locations);
+		});
+	})
 
 //on routes that end in /devices/searchBy/:filter
 router.route('/devices/searchBy/:filter')
