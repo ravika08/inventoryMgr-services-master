@@ -4,12 +4,13 @@
 // =============================================================================
 
 // call the packages we need
-var express    = require('express');        // call express
-var app        = express();                 // define our app using express
-var bodyParser = require('body-parser');
-var mongoose   = require('mongoose');
-var Device     = require('./app/models/device');
-var Location   = require('./app/models/locations');
+var express      = require('express');        // call express
+var app          = express();                 // define our app using express
+var bodyParser   = require('body-parser');
+var mongoose     = require('mongoose');
+var Device       = require('./app/models/device');
+var DeviceHistory= require ('./app/models/deviceHistory');
+var Location     = require('./app/models/locations');
 
 // configure app to use bodyParser()
 // this will let us get the data from a POST
@@ -61,10 +62,23 @@ router.route('/devices')
 				device.assetID=req.body.assetID;
 				device.purchase_date=Date.now();
         // save the device and check for errors
-        device.save(function(err) {
+        device.save(function(err,dev) {
             if (err)
                 res.send(err);
-
+								var deviceHistory = new DeviceHistory();
+								deviceHistory.user=req.body.user;
+								deviceHistory.lastUpdated_at=Date.now();
+								deviceHistory.documentId=dev.id;
+								deviceHistory.status=device.status;
+								deviceHistory.hours=device.hours;
+								deviceHistory.os=device.os;
+								deviceHistory.osversion=device.osversion;
+								deviceHistory.client=device.client;
+								deviceHistory.save(function(err){
+									if(err){
+										console.log("History save error :"+err);
+									}
+								});
             res.json(device);
         });
     })
@@ -255,22 +269,35 @@ router.route('/atm/osversions')
 
 					Device.findOne({deviceId: req.params.deviceId}, function(err, device) {
 
-							if (err)
-									res.send(err);
+						
+            if(device){
 
 						device.location=req.body.location;
 						device.cloudType=req.body.cloudType;
 						device.osversion=req.body.osversion;
 						device.client=req.body.client;
 						if(req.body.hours!=null)
-						   device.hours=device.hours+req.body.hours;
+						   device.hours=device.hours+parseInt(req.body.hours);
 		        // save the device and check for errors
-		        device.save(function(err) {
-		            if (err)
-		                res.send(err);
+		        device.save(function(err,dev) {
 
+							var deviceHistory = new DeviceHistory();
+							deviceHistory.user=req.body.user;
+							deviceHistory.lastUpdated_at=Date.now();
+							deviceHistory.documentId=dev.id;
+							deviceHistory.status=device.status;
+							deviceHistory.hours=device.hours;
+							deviceHistory.save(function(err){
+											if(err){
+												console.log("History save error :"+err);
+											}
+										});
 		            res.json(device);
 		        });
+					}else{
+
+						res.status(400).json({status:400,message:"Error:Unable to find device"});
+					}
 		    });
 			})
         // update the device with this id (accessed at PUT http://localhost:8080/api/devices/:device_id)
@@ -280,33 +307,42 @@ router.route('/atm/osversions')
 
                 Device.findOne({deviceId: req.params.deviceId}, function(err, device) {
 
-                    if (err)
-                        res.send(err);
+                    if(device){
 
                     device.status = req.body.status;
                     device.user=req.body.user; // update the devices info
-                    console.log("device status "+req.body.status);
 										if(req.body.status=="available"){
-											console.log("available");
 											var now=Date.now();
 											var hours = Math.abs(now - device.lastUpdated_at) / 36e5;
 											device.hours=device.hours+hours;
 											device.hours=device.hours.toFixed(2);
-											console.log("hours "+hours);
+
 										}
-										console.log("device updated at");
+
 										device.lastUpdated_at=Date.now();
-										console.log("device save");
+
                     // save the device
-                    device.save(function(err) {
+                    device.save(function(err,dev) {
                         if (err){
 												   console.log("error"+err);
                             res.send(err);
 													}
-												console.log("send response json");
+													var deviceHistory = new DeviceHistory();
+													deviceHistory.user=req.body.user;
+													deviceHistory.lastUpdated_at=Date.now();
+													deviceHistory.documentId=dev.id;
+													deviceHistory.status=device.status;
+													deviceHistory.hours=device.hours;
+													deviceHistory.save(function(err){
+														if(err){
+															console.log("History save error :"+err);
+														}
+													});
                         res.json(device);
                     });
-
+									}else{
+										res.status(400).json({status:400,message:"Error:Unable to find device"});
+									}
                 });
             })
             .delete(function(req, res) {

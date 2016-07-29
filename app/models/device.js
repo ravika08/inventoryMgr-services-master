@@ -22,10 +22,5 @@ var DeviceSchema   = new Schema({
 		imei:String,
 		purchase_date:Date
 });
-DeviceSchema.plugin(require('historical'), {
-    connection: mongoose.createConnection('mongodb://localhost/inventoryMgr'),
-    name: null,
-    primaryKeyName: null,
-    primaryKeyType: null
-});
+
 module.exports = mongoose.model('Device', DeviceSchema);
