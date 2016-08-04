@@ -3,7 +3,7 @@ var Schema       = mongoose.Schema;
 
 var DeviceHistorySchema   = new Schema({
     lastUpdated_at:Date,
-		documentId:String,
+		deviceId:String,
     status:String,
 		hours:Number,
 		user:String,

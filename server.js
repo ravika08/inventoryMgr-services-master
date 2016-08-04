@@ -67,8 +67,8 @@ router.route('/devices')
                 res.send(err);
 								var deviceHistory = new DeviceHistory();
 								deviceHistory.user=req.body.user;
-								deviceHistory.lastUpdated_at=Date.now();
-								deviceHistory.documentId=dev.id;
+								deviceHistory.Updated_at=Date.now();
+								deviceHistory.deviceId=dev.deviceId;
 								deviceHistory.status=device.status;
 								deviceHistory.hours=device.hours;
 								deviceHistory.os=device.os;
@@ -254,6 +254,15 @@ router.route('/atm/osversions')
 				});
     // on routes that end in /devices/:deviceId
     // ----------------------------------------------------
+	router.route('/atm/history/:deviceId')
+				.get(function(req,res){
+					DeviceHistory.find({deviceId:req.params.deviceId},function(err,device){
+						if(err)
+						  res.send(err);
+						res.json(device);
+					});
+				})
+
     router.route('/devices/:deviceId')
 
         // get the device with that id (accessed at GET http://localhost:8080/api/devices/:device_id)
@@ -269,7 +278,7 @@ router.route('/atm/osversions')
 
 					Device.findOne({deviceId: req.params.deviceId}, function(err, device) {
 
-						
+
             if(device){
 
 						device.location=req.body.location;
@@ -283,10 +292,12 @@ router.route('/atm/osversions')
 
 							var deviceHistory = new DeviceHistory();
 							deviceHistory.user=req.body.user;
-							deviceHistory.lastUpdated_at=Date.now();
-							deviceHistory.documentId=dev.id;
+							deviceHistory.Updated_at=Date.now();
+							deviceHistory.deviceId=device.deviceId;
 							deviceHistory.status=device.status;
 							deviceHistory.hours=device.hours;
+							deviceHistory.osversion=device.osversion;
+							deviceHistory.os=device.os;
 							deviceHistory.save(function(err){
 											if(err){
 												console.log("History save error :"+err);
@@ -329,10 +340,12 @@ router.route('/atm/osversions')
 													}
 													var deviceHistory = new DeviceHistory();
 													deviceHistory.user=req.body.user;
-													deviceHistory.lastUpdated_at=Date.now();
-													deviceHistory.documentId=dev.id;
+													deviceHistory.Updated_at=Date.now();
+													deviceHistory.deviceId=dev.deviceId;
 													deviceHistory.status=device.status;
 													deviceHistory.hours=device.hours;
+													deviceHistory.osversion=device.osversion;
+													deviceHistory.os=device.os;
 													deviceHistory.save(function(err){
 														if(err){
 															console.log("History save error :"+err);
