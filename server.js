@@ -253,7 +253,7 @@ router.route('/atm/osversions')
 					});
 				});
 
-	router.route('/atm/hoursUsed/clientsPerOs/:startDate/:endDate')
+	router.route('/atm/hoursUsed/groupedByClient/:startDate/:endDate')
 	       .get(function(req,res){
 					 var startDate = new Date(req.params.startDate);
 					 var endDate = new Date(req.params.endDate);
@@ -271,7 +271,7 @@ router.route('/atm/osversions')
 				 }
 		 );
 				 })
-router.route('/atm/devicesUsed/perClient/:startDate/:endDate')
+router.route('/atm/devicesUsed/groupedByClient/:startDate/:endDate')
       .get(function(req,res){
 				var startDate=new Date(req.params.startDate);
 				var endDate = new Date(req.params.endDate);
@@ -295,6 +295,30 @@ router.route('/atm/devicesUsed/perClient/:startDate/:endDate')
 			}
 	);
 			})
+
+router.route('/atm/devicesUsed/groupedByOS/:startDate/:endDate')
+			      .get(function(req,res){
+							var startDate=new Date(req.params.startDate);
+							var endDate = new Date(req.params.endDate);
+							DeviceHistory.aggregate([{$match:{Updated_at:{$gte: startDate, $lt: endDate}}},
+								{ $group: {
+			                _id:{os:'$os'},
+											deviceIds:{$addToSet: '$deviceId'}
+			            }},
+									{$project: {
+						 						_id: 0,
+												os:'$_id.os',
+						            DeviceCount: {$size: '$deviceIds'}
+				 }}
+						], function (err, results) {
+								if (err) {
+										console.error(err);
+								} else {
+										res.json(results);
+								}
+						}
+				);
+						})
 
     // on routes that end in /devices/:deviceId
     // ----------------------------------------------------
