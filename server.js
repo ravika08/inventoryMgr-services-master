@@ -70,7 +70,7 @@ router.route('/devices')
 								deviceHistory.Updated_at=Date.now();
 								deviceHistory.deviceId=dev.deviceId;
 								deviceHistory.status=device.status;
-								deviceHistory.hours=device.hours;
+								deviceHistory.hours=0;
 								deviceHistory.os=device.os;
 								deviceHistory.osversion=device.osversion;
 								deviceHistory.client=device.client;
@@ -252,6 +252,50 @@ router.route('/atm/osversions')
 						}
 					});
 				});
+
+	router.route('/atm/hoursUsed/clientsPerOs/:startDate/:endDate')
+	       .get(function(req,res){
+					 var startDate = new Date(req.params.startDate);
+					 var endDate = new Date(req.params.endDate);
+					 DeviceHistory.aggregate([{$match:{Updated_at:{$gte: startDate, $lt: endDate}}},
+						 { $group: {
+								 _id:{client:'$client',os:'$os'},
+								 total_hours: { $sum: '$hours'}
+						 }}
+				 ], function (err, results) {
+						 if (err) {
+								 console.error(err);
+						 } else {
+								 res.json(results);
+						 }
+				 }
+		 );
+				 })
+router.route('/atm/devicesUsed/perClient/:startDate/:endDate')
+      .get(function(req,res){
+				var startDate=new Date(req.params.startDate);
+				var endDate = new Date(req.params.endDate);
+				DeviceHistory.aggregate([{$match:{Updated_at:{$gte: startDate, $lt: endDate}}},
+					{ $group: {
+                _id:{client:'$client',os:'$os'},
+								deviceIds:{$addToSet: '$deviceId'}
+            }},
+						{$project: {
+			 						_id: 0,
+			 						client: '$_id.client',
+									os:'$_id.os',
+			            DeviceCount: {$size: '$deviceIds'}
+	 }}
+			], function (err, results) {
+					if (err) {
+							console.error(err);
+					} else {
+							res.json(results);
+					}
+			}
+	);
+			})
+
     // on routes that end in /devices/:deviceId
     // ----------------------------------------------------
 	router.route('/atm/history/:deviceId')
@@ -295,7 +339,7 @@ router.route('/atm/osversions')
 							deviceHistory.Updated_at=Date.now();
 							deviceHistory.deviceId=device.deviceId;
 							deviceHistory.status=device.status;
-							deviceHistory.hours=device.hours;
+							deviceHistory.hours=parseInt(req.body.hours);
 							deviceHistory.osversion=device.osversion;
 							deviceHistory.os=device.os;
 							deviceHistory.save(function(err){
@@ -319,12 +363,12 @@ router.route('/atm/osversions')
                 Device.findOne({deviceId: req.params.deviceId}, function(err, device) {
 
                     if(device){
-
+										var hours=0;
                     device.status = req.body.status;
                     device.user=req.body.user; // update the devices info
 										if(req.body.status=="available"){
 											var now=Date.now();
-											var hours = Math.abs(now - device.lastUpdated_at) / 36e5;
+											hours = Math.abs(now - device.lastUpdated_at) / 36e5;
 											device.hours=device.hours+hours;
 											device.hours=device.hours.toFixed(2);
 
@@ -343,7 +387,7 @@ router.route('/atm/osversions')
 													deviceHistory.Updated_at=Date.now();
 													deviceHistory.deviceId=dev.deviceId;
 													deviceHistory.status=device.status;
-													deviceHistory.hours=device.hours;
+													deviceHistory.hours=hours;
 													deviceHistory.osversion=device.osversion;
 													deviceHistory.os=device.os;
 													deviceHistory.save(function(err){
