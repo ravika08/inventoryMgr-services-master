@@ -67,7 +67,7 @@ router.route('/devices')
                 res.send(err);
 								var deviceHistory = new DeviceHistory();
 								deviceHistory.user=req.body.user;
-								deviceHistory.Updated_at=Date.now();
+								deviceHistory.lastUpdated_at=Date.now();
 								deviceHistory.deviceId=dev.deviceId;
 								deviceHistory.status=device.status;
 								deviceHistory.hours=0;
@@ -257,7 +257,7 @@ router.route('/atm/osversions')
 	       .get(function(req,res){
 					 var startDate = new Date(req.params.startDate);
 					 var endDate = new Date(req.params.endDate);
-					 DeviceHistory.aggregate([{$match:{Updated_at:{$gte: startDate, $lt: endDate}}},
+					 DeviceHistory.aggregate([{$match:{lastUpdated_at:{$gte: startDate, $lt: endDate}}},
 						 { $group: {
 								 _id:{client:'$client',os:'$os'},
 								 total_hours: { $sum: '$hours'}
@@ -275,7 +275,7 @@ router.route('/atm/devicesUsed/groupedByClient/:startDate/:endDate')
       .get(function(req,res){
 				var startDate=new Date(req.params.startDate);
 				var endDate = new Date(req.params.endDate);
-				DeviceHistory.aggregate([{$match:{Updated_at:{$gte: startDate, $lt: endDate}}},
+				DeviceHistory.aggregate([{$match:{lastUpdated_at:{$gte: startDate, $lt: endDate}}},
 					{ $group: {
                 _id:{client:'$client',os:'$os'},
 								deviceIds:{$addToSet: '$deviceId'}
@@ -300,7 +300,7 @@ router.route('/atm/devicesUsed/groupedByOS/:startDate/:endDate')
 			      .get(function(req,res){
 							var startDate=new Date(req.params.startDate);
 							var endDate = new Date(req.params.endDate);
-							DeviceHistory.aggregate([{$match:{Updated_at:{$gte: startDate, $lt: endDate}}},
+							DeviceHistory.aggregate([{$match:{lastUpdated_at:{$gte: startDate, $lt: endDate}}},
 								{ $group: {
 			                _id:{os:'$os'},
 											deviceIds:{$addToSet: '$deviceId'}
@@ -353,19 +353,24 @@ router.route('/atm/devicesUsed/groupedByOS/:startDate/:endDate')
 						device.cloudType=req.body.cloudType;
 						device.osversion=req.body.osversion;
 						device.client=req.body.client;
-						if(req.body.hours!=null)
+						if(req.body.hours!=null){
 						   device.hours=device.hours+parseInt(req.body.hours);
+						 }
 		        // save the device and check for errors
 		        device.save(function(err,dev) {
 
 							var deviceHistory = new DeviceHistory();
-							deviceHistory.user=req.body.user;
-							deviceHistory.Updated_at=Date.now();
+							deviceHistory.lastUpdated_at=Date.now();
 							deviceHistory.deviceId=device.deviceId;
 							deviceHistory.status=device.status;
+							if(req.body.hours!=null){
 							deviceHistory.hours=parseInt(req.body.hours);
-							deviceHistory.osversion=device.osversion;
+						}else{
+							deviceHistory.hours=0;
+						}
 							deviceHistory.os=device.os;
+							deviceHistory.osversion=device.osversion;
+							deviceHistory.client=device.client;
 							deviceHistory.save(function(err){
 											if(err){
 												console.log("History save error :"+err);
@@ -399,26 +404,28 @@ router.route('/atm/devicesUsed/groupedByOS/:startDate/:endDate')
 										}
 
 										device.lastUpdated_at=Date.now();
-
+										var deviceHistory = new DeviceHistory();
+										deviceHistory.user=req.body.user;
+										deviceHistory.lastUpdated_at=Date.now();
+										deviceHistory.deviceId=device.deviceId;
+										deviceHistory.status=device.status;
+										deviceHistory.hours=hours;
+										deviceHistory.client=device.client;
+										deviceHistory.osversion=device.osversion;
+										deviceHistory.os=device.os;
+										deviceHistory.save(function(err){
+											if(err){
+												console.log("History save error :"+err);
+											}
+										});
                     // save the device
                     device.save(function(err,dev) {
+
                         if (err){
 												   console.log("error"+err);
                             res.send(err);
 													}
-													var deviceHistory = new DeviceHistory();
-													deviceHistory.user=req.body.user;
-													deviceHistory.Updated_at=Date.now();
-													deviceHistory.deviceId=dev.deviceId;
-													deviceHistory.status=device.status;
-													deviceHistory.hours=hours;
-													deviceHistory.osversion=device.osversion;
-													deviceHistory.os=device.os;
-													deviceHistory.save(function(err){
-														if(err){
-															console.log("History save error :"+err);
-														}
-													});
+
                         res.json(device);
                     });
 									}else{
